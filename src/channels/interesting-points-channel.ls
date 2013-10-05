@@ -43,8 +43,10 @@ module.exports  =
           if result == 'err'
             emit-callback-fn 'err'
           else
+
             if mock-server.ips.create-a-new-ip-on-a-new-url is false
               (result) <-! mock-interesting-points.mock-create-a-new-ip-on-a-new-url data
+
             else
               (location) <-! locations-manager.create-or-update-a-location socket.id, 
                 url: data.within-location.url

@@ -1,4 +1,4 @@
-require! ['./database', './utils']
+require! ['./database', './utils','events'.EventEmitter ]
 event-bus = require './event-bus'
 _ = require 'underscore'
 
@@ -45,7 +45,9 @@ create-interesting-point = !(location, interesting-point-data, callback)->
   (err, result) <-! db.at-plus['interesting-points'].insert interesting-point
   callback summarize interesting-point
 
+
 send-message = !(location, data, callback) ->
+
   (result)<-! save-msg-into-db data
   if result
     callback { 
@@ -56,11 +58,10 @@ send-message = !(location, data, callback) ->
   else
     callback 'err'
 
-
 save-msg-into-db = !(data, callback) ->
   (db) <-! database.get-db 
   (err,result) <-! db.at-plus.messages.insert data
-  throw err if err
+  throw new Error err if err
   callback result[0]
 
 update-ip-with-msg = !(session-id, url, data)->

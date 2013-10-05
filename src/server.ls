@@ -1,5 +1,5 @@
-require! [express, http, path, jade, 'socket.io', 'connect', './database', './patchs'
-  './default-channel', './testing-helper-channel', './locations-channel', './interesting-points-channel', './config', './session-store']
+require! [express, http, path, jade, 'socket.io', 'connect', 'domain', './database', './patchs'
+  './default-channel', './testing-helper-channel', './locations-channel', './interesting-points-channel', './config', './session-store','events'.EventEmitter]
 
 port = process.env.PORT or config.server.port 
  

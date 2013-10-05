@@ -6,24 +6,19 @@ describe '测试在新URL上创建新兴趣点时，Locations Channel与Interest
     before-each !->
       count-locaitons-in-db !(amount)-> total-locations-in-db := amount
       count-interesting-points-in-db !(amount)-> total-interestiong-points-in-db := amount
-      testing-data := prepare-testing-data!
-    
-    '''
+      testing-data := prepare-testing-data!  #    
+
     describe 'url为已有locatoin的alias时，消息内容正确，兴趣点正确保存', !->
       can '创建者收到response-create-a-new-ip-on-a-new-url，之前在此页面的用户收到push-location-updated', !(done)->
         should-creator-and-observer-recieved-correct-messages-AND-location-and-interesting-point-created \
           is-url-new-location = false, done
+      can '创建者发送一条错误报文, 服务端应该响应错误信息, 观察者不应该收到更新信息', !(done)->
+        should-response-an-err-when-message-has-err done
 
     describe 'url为新location时，消息内容正确，兴趣点正确保存', !->
       can '创建者收到response-create-a-new-ip-on-a-new-url，之前在此页面的用户收到push-location-updated', !(done)->
         should-creator-and-observer-recieved-correct-messages-AND-location-and-interesting-point-created \
           is-url-new-location = true, done
-    '''
-
-    describe '用户小东在兴趣点上发言, 消息发送正确, 保存正确', !->
-      can '成功后,小东能够收到返回信息,所有用户(包括小东)能够收到该条发言信息', !(done)->
-        should-sender-and-observer-recieved-correct-messages-AND-ip-updated done
-
 
 
   before-each !(done)->
@@ -42,53 +37,38 @@ describe '测试在新URL上创建新兴趣点时，Locations Channel与Interest
 
 prepare-testing-data = ->
   request-create-a-new-ip-on-a-new-url: utils.load-fixture 'request-create-a-new-ip-on-a-new-url'
+  request-create-a-new-ip-on-a-new-url-with-err-message: utils.load-fixture 'request-create-a-new-ip-on-a-new-url-with-err-message'
   push-location-updated: utils.load-fixture 'push-location-updated'
-  request-send-a-message-on-an-ip: utils.load-fixture 'request-send-a-message-on-an-ip'
-  push-ip-updated: utils.load-fixture 'push-ip-updated'
 
-should-sender-and-observer-recieved-correct-messages-AND-ip-updated = !(done)->
-  (sender, observer,wait) <-! H.open-two-clients false, done
-  sender.ip.on 'response-send-a-new-message-on-an-ip',  wait !(data)->
-    debug '发送者收到发送成功信息'
-    data.should.have.property 'mid'
-    data.should.have.property 'ipid'
-    data.result.should.eql 'success'
-    done-waiter = wait!
-    done-waiter!
-  (testing-data-to-send) <-! add-ipid-and-lid-to-testing-data testing-data.request-send-a-message-on-an-ip
-
-  observer.ip.on 'push-ip-updated', wait !(data)->
-    debug '观察者收到location更新信息'
-    data.type.should.equal 'new-msg-added'
-    data.added-msg.should.have.property 'mid'
-
-  sender.ip.emit 'request-send-a-new-message-on-an-ip', testing-data-to-send 
 
 should-creator-and-observer-recieved-correct-messages-AND-location-and-interesting-point-created = !(is-url-new-location, done)->
   request = testing-data.request-create-a-new-ip-on-a-new-url
   (creator, observer, wait) <-! H.open-two-clients is-url-new-location, done
-  creator.ip.on 'response-create-a-new-ip-on-a-new-url', wait !(data)-> 
-    debug "创建者收到创建成功消息"
-    data.should.have.property 'lid'
-    data.should.have.property 'ipid'
-    data.result.should.eql 'success'
-
-    done-waiter = wait!
-    <-! (if is-url-new-location then should-db-in-clude-a-new-location else should-db-not-include-any-new-location) total-locations-in-db
-    <-! (if is-url-new-location then should-db-in-clude-the-new-location else should-url-added-as-location-alias) request
-    <-! should-db-include-a-new-interesting-point total-interestiong-points-in-db
-    <-! should-db-include-the-requested-new-ip request
-    done-waiter!
-
-  if is-url-new-location
-    creator.locations.on 'ask-location-internality', wait !(data)->
-      debug "创建者收到查询internality消息"
+  creator.ip.emit 'request-create-a-new-ip-on-a-new-url', request, wait !(data)-> 
+    if data is 'err'
+      console.log '出错'
+    else
+      debug "创建者收到创建成功消息"
       data.should.have.property 'lid'
-      data.should.have.property 'url', request.within-location.url
-      data.should.have.property 'serverRetrievedHtml'
+      data.should.have.property 'ipid'
+      data.result.should.eql 'success'
 
-      creator.locations.emit 'answer-location-internality', 
-        {lid: data.lid, url: data.url, is-internal: H.fake-figure-out-location-internality!}
+      done-waiter = wait!
+      <-! (if is-url-new-location then should-db-in-clude-a-new-location else should-db-not-include-any-new-location) total-locations-in-db
+      <-! (if is-url-new-location then should-db-in-clude-the-new-location else should-url-added-as-location-alias) request
+      <-! should-db-include-a-new-interesting-point total-interestiong-points-in-db
+      <-! should-db-include-the-requested-new-ip request
+      done-waiter!
+
+    if is-url-new-location
+      creator.locations.on 'ask-location-internality', wait !(data)->
+        debug "创建者收到查询internality消息"
+        data.should.have.property 'lid'
+        data.should.have.property 'url', request.within-location.url
+        data.should.have.property 'serverRetrievedHtml'
+
+        creator.locations.emit 'answer-location-internality', 
+          {lid: data.lid, url: data.url, is-internal: H.fake-figure-out-location-internality!}
 
   observer.locations.on 'push-location-updated', wait !(data)-> 
     debug "观察者收到location更新消息"
@@ -97,14 +77,17 @@ should-creator-and-observer-recieved-correct-messages-AND-location-and-interesti
     data.added-interesting-point.should.have.property '_id'
     data.added-interesting-point.created-by.should.have.property '_id'
     (utils.chop-off-id data).should.eql (utils.chop-off-id testing-data.push-location-updated)
+    done!
 
-  creator.locations.on 'push-location-updated', !(data)-> 
-    should.fail "创建者收到了'push-location-updated'"
     
-  observer.ip.on 'response-create-a-new-ip-on-a-new-url', !(data)-> 
-    should.fail "观察者收到了'response-create-a-new-ip-on-a-new-url'"
 
-  creator.ip.emit 'request-create-a-new-ip-on-a-new-url', request
+should-response-an-err-when-message-has-err = !(done)->  
+  request = testing-data.request-create-a-new-ip-on-a-new-url-with-err-message
+  (creator, observer, wait) <-! H.open-two-clients false, done
+
+  creator.ip.emit 'request-create-a-new-ip-on-a-new-url', request, wait !(data)->
+    data.should.eql 'err'
+
 
 count-locaitons-in-db = !(callback)->
   count-amount-of-docs-in-a-collection 'locations', callback

@@ -33,10 +33,13 @@ module.exports  =
 
         socket.on 'create-a-new-reply', !(data, emit-callback-fn)->
           debug "----------------in: 'create-a-new-reply', socket.id:-------------", socket.id
-          console.log 'in: interesting point channel'
           emit-callback-fn do
             result: 'success'
-          
+        
+        socket.on 'create-a-new-comment', !(data, emit-callback-fn)->
+          debug "----------------in: 'create-a-new-comment', socket.id:---------", socket.id
+          emit-callback-fn do 
+            result: 'success'
           
         callback!
         

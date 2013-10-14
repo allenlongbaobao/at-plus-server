@@ -9,6 +9,7 @@ module.exports <<<
       'request-update-location': true
       'answer-location-internality': true
       'create-a-new-reply': true
+      'create-a-new-comment': true
     # locations:
     # users:
     # chats:

@@ -8,6 +8,7 @@ module.exports <<<
       'request-initial': true
       'request-update-location': true
       'answer-location-internality': true
+      'create-a-new-reply': true
     # locations:
     # users:
     # chats:

@@ -31,6 +31,13 @@ module.exports  =
             ipid: interesting-point-summary._id
           locations-manager.update-location-with-ip socket.id, data.within-location.url, location, interesting-point-summary
 
+        socket.on 'create-a-new-reply', !(data, emit-callback-fn)->
+          debug "----------------in: 'create-a-new-reply', socket.id:-------------", socket.id
+          console.log 'in: interesting point channel'
+          emit-callback-fn do
+            result: 'success'
+          
+          
         callback!
         
     }

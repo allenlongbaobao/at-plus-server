@@ -7,6 +7,7 @@ require! redis
 type = 'in-memory'
 redis-store = null
 memory-store = {}
+test = Math.random!
 
 get-in-memory = !(sid, fn)->
   fn and fn(memory-store[sid] or {})

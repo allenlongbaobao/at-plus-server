@@ -1,5 +1,12 @@
-require! [express, http, path, jade, 'socket.io', 'connect', 'domain', './database', './patchs'
-  './default-channel', './testing-helper-channel', './locations-channel', './interesting-points-channel', './config', './session-store','events'.EventEmitter]
+require! [express, http, path, 'socket.io', 'connect', 'domain', './database', './socket-decorator', './session-decorator', './request-verify-decorator', './mock-decorator', './decorator', './patchs'
+  './default-channel', './testing-helper-channel', './locations-channel', './interesting-points-channel', './users-channel', './config', './session-store']
+
+server-domain = domain.create!
+server-domain.on 'error', !(err)->
+  console.log '=============== Error Handle ================'
+  console.log 'Error message: ', err.message
+  console.log 'Error stack:', err.stack
+  console.log '============================================='
 
 port = process.env.PORT or config.server.port 
  
@@ -27,11 +34,19 @@ initial-at-plus-server = !->
   testing-helper-channel.init io # ！！注意：仅用于测试，正式发布时需要去掉。
   locations-channel.init io
   interesting-points-channel.init io
+  users-channel.init io
 
-patchs.patch-socket-with-accross-namespaces-session!
+decorator-bootstrap = new decorator!
+decorator-bootstrap
+  .use new session-decorator!
+  .use new request-verify-decorator!
+  .use new mock-decorator!
+socket-decorator.decorate-socket-on decorator-bootstrap
+# patchs.patch-socket-with-accross-namespaces-session!
 
 module.exports =
   start: !(done)->
+    <-! server-domain.run
     if not process.env.SERVER_ALREADY_RUNNING
       console.info "\n****************** start server **********************"
       configure-at-plus-server!

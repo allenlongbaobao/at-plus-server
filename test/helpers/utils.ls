@@ -35,7 +35,7 @@ open-clean-db-and-load-fixtures = !(config, done)->
   async.each collections, !(collection, next)->
     (err, docs) <-! db.at-plus.[collection].insert config[collection], {safe: true}
     next!
-  , ->
+  , !->
     done!
 
 prepare-clean-test-db = !(done)->

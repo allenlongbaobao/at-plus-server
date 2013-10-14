@@ -1,5 +1,5 @@
 # mockable Singleton
-require! ['mongodb'.Db, 'mongodb'.Server, 'mongodb'.MongoClient, './config']
+require! ['mongodb'.Db, 'mongodb'.Server, 'mongodb'.MongoClient, 'mongodb'.ObjectID, './config']
 
 db = null
 

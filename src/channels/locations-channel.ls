@@ -59,7 +59,6 @@ get-response-initial-data = (locations, interesting-points-summaries-map, brief-
   locations.for-each !(location)->
     location.interesting-points-summaries = interesting-points-summaries-map[location._id] 
     # debug "location.interesting-points-summaries: ", location.interesting-points-summaries
-    #if location.interesting-points-summaries
     for ips in location.interesting-points-summaries
       ips.recent-messages = recent-messages-map[ips._id]
       # debug "ips: ", ips
@@ -107,9 +106,10 @@ module.exports  =
 
       business-handlers-register: !(socket, data, callback)->
         # ----- 以下响应来自客户端的请求 ---------------- #
-        socket.on 'request-update-location', !(data)->
+        socket.on 'request-update-location', !(data, callback)->
           <-! locations-manager.update-location data.lid, data.update
-          socket.broadcast.to(data.lid).emit 'response-update-location', data
+          socket.broadcast.to(data.lid).emit 'push-location-updated', data
+          callback data
           # debug 'response-update-location emitted at: ', data.lid
 
         socket.on 'answer-location-internality', !(data)->

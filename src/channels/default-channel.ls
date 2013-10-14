@@ -17,7 +17,7 @@ module.exports =
         # socket.session.message = 'hello'
         callback {
           sid: socket.id
-          message: socket.session.message or 'hello'
+          session: socket.session
         }
 
       business-handlers-register: !(socket, data, callback)->

@@ -29,7 +29,9 @@ module.exports =
 
   server-channel-initial-wrapper: !(config)->
     config = get-safe-config config
+    process.domain.add config.channel if process.domain
     config.channel.on 'connection', !(socket)->
+      process.domain.add socket if process.domain
       # 这里形成了闭包，保障在business handler响应event-bus事件的时候，能够用到正确的socket
       (data, done) <-! socket.on 'request-initial'
       (result) <-! config.request-initial-handler socket, data 
